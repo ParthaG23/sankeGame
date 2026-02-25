@@ -13,23 +13,26 @@ const GameArea = ({
   onStart,
 }) => {
   return (
-    <div className="flex flex-col h-full bg-black">
+    <div className="flex flex-col flex-1 bg-black">
 
-      {/* ===== BOARD ===== */}
-      <div className="flex-1 relative flex items-center justify-center overflow-hidden p-2">
-        <SnakeBoard
-          snake={snake}
-          food={food}
-          GRID_SIZE={GRID_SIZE}
-        />
+      {/* ===== BOARD AREA ===== */}
+      <div className="flex-1 flex items-center justify-center p-3">
+        {/* This container controls size */}
+        <div className="w-full max-w-[520px] aspect-square">
+          <SnakeBoard
+            snake={snake}
+            food={food}
+            GRID_SIZE={GRID_SIZE}
+          />
 
-        {gameOver && (
-          <GameOverOverlay onRestart={onRestart} />
-        )}
+          {gameOver && (
+            <GameOverOverlay onRestart={onRestart} />
+          )}
+        </div>
       </div>
 
       {/* ===== MOBILE CONTROLS ===== */}
-      <div className="md:hidden bg-slate-900 border-t border-slate-700 p-4 flex justify-between items-center">
+      <div className="md:hidden bg-slate-900 border-t border-slate-700 px-4 py-3 flex justify-between items-center">
         <div className="text-white text-sm">
           Score: <span className="text-yellow-400 font-semibold">{score}</span>
         </div>

@@ -55,12 +55,50 @@ export default function useSnakeGame() {
     bgMusic.current.volume = 0.4;
   }, []);
 
+  /* ================= DIRECTION CONTROL ================= */
+
+  const changeDirection = (newDirection) => {
+    if (!isRunning) return;
+
+    const { x, y } = directionRef.current;
+
+    // Prevent reverse direction
+    if (x + newDirection.x === 0 && y + newDirection.y === 0) {
+      return;
+    }
+
+    setDirection(newDirection);
+  };
+
+  /* ================= KEYBOARD CONTROL ================= */
+
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (!isRunning) return;
+
+      if (e.key === "ArrowUp")
+        changeDirection({ x: 0, y: -1 });
+
+      if (e.key === "ArrowDown")
+        changeDirection({ x: 0, y: 1 });
+
+      if (e.key === "ArrowLeft")
+        changeDirection({ x: -1, y: 0 });
+
+      if (e.key === "ArrowRight")
+        changeDirection({ x: 1, y: 0 });
+    };
+
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [isRunning]);
+
   /* ================= GAME LOOP ================= */
 
   useEffect(() => {
     if (!isRunning || gameOver) return;
 
-    const dynamicSpeed = Math.max(BASE_SPEED - score * 8, 70);
+    const dynamicSpeed = Math.max(BASE_SPEED - score * 8, 80);
 
     const interval = setInterval(() => {
       setSnake((prevSnake) => {
@@ -141,68 +179,6 @@ export default function useSnakeGame() {
     return () => clearInterval(interval);
   }, [food, isRunning, gameOver, score, highScore]);
 
-  /* ================= KEYBOARD CONTROL ================= */
-
-  useEffect(() => {
-    const handleKey = (e) => {
-      if (!isRunning) return;
-
-      if (e.key === "ArrowUp" && directionRef.current.y === 0)
-        setDirection({ x: 0, y: -1 });
-
-      if (e.key === "ArrowDown" && directionRef.current.y === 0)
-        setDirection({ x: 0, y: 1 });
-
-      if (e.key === "ArrowLeft" && directionRef.current.x === 0)
-        setDirection({ x: -1, y: 0 });
-
-      if (e.key === "ArrowRight" && directionRef.current.x === 0)
-        setDirection({ x: 1, y: 0 });
-    };
-
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [isRunning]);
-
-  /* ================= TOUCH CONTROL ================= */
-
-  useEffect(() => {
-    let startX = 0;
-    let startY = 0;
-
-    const handleStart = (e) => {
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-    };
-
-    const handleEnd = (e) => {
-      if (!isRunning) return;
-
-      const dx = e.changedTouches[0].clientX - startX;
-      const dy = e.changedTouches[0].clientY - startY;
-
-      if (Math.abs(dx) > Math.abs(dy)) {
-        if (dx > 0 && directionRef.current.x === 0)
-          setDirection({ x: 1, y: 0 });
-        else if (dx < 0 && directionRef.current.x === 0)
-          setDirection({ x: -1, y: 0 });
-      } else {
-        if (dy > 0 && directionRef.current.y === 0)
-          setDirection({ x: 0, y: 1 });
-        else if (dy < 0 && directionRef.current.y === 0)
-          setDirection({ x: 0, y: -1 });
-      }
-    };
-
-    window.addEventListener("touchstart", handleStart);
-    window.addEventListener("touchend", handleEnd);
-
-    return () => {
-      window.removeEventListener("touchstart", handleStart);
-      window.removeEventListener("touchend", handleEnd);
-    };
-  }, [isRunning]);
-
   /* ================= START GAME ================= */
 
   const startGame = () => {
@@ -210,6 +186,7 @@ export default function useSnakeGame() {
     setIsRunning(true);
 
     if (bgMusic.current) {
+      bgMusic.current.currentTime = 0;
       bgMusic.current.play().catch(() => {});
     }
   };
@@ -240,5 +217,6 @@ export default function useSnakeGame() {
     startGame,
     restartGame,
     isRunning,
+    changeDirection, // <-- Important for mobile swipe
   };
 }
