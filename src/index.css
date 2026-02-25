@@ -1,0 +1,24 @@
+@import "tailwindcss";
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+/* Animated background glow */
+/* Background Glow */
+.bg-glow {
+  background: radial-gradient(circle at center, rgba(0,255,100,0.08), transparent 70%);
+  animation: glowMove 6s ease-in-out infinite alternate;
+}
+
+@keyframes glowMove {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.2); }
+}
+
+/* Food Pulse */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
