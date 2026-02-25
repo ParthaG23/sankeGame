@@ -47,10 +47,10 @@ export default function useSnakeGame() {
   const bgMusic = useRef(null);
 
   useEffect(() => {
-    eatSound.current = new Audio("/sounds/eat.mpeg");
-    gameOverSound.current = new Audio("/sounds/gameover.mpeg");
+    eatSound.current = new Audio("/sounds/eat.mp3");
+    gameOverSound.current = new Audio("/sounds/gameover.mp3");
 
-    bgMusic.current = new Audio("/sounds/bg-music.mpeg");
+    bgMusic.current = new Audio("/sounds/bg-music.mp3");
     bgMusic.current.loop = true;
     bgMusic.current.volume = 0.4;
   }, []);
