@@ -25,9 +25,7 @@ function getRandomFood(snake) {
 
 export default function useSnakeGame() {
   const [snake, setSnake] = useState(INITIAL_SNAKE);
-  const [food, setFood] = useState(() =>
-    getRandomFood(INITIAL_SNAKE)
-  );
+  const [food, setFood] = useState(() => getRandomFood(INITIAL_SNAKE));
   const [direction, setDirection] = useState(INITIAL_DIRECTION);
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState(0);
@@ -39,6 +37,8 @@ export default function useSnakeGame() {
 
   const directionRef = useRef(direction);
   directionRef.current = direction;
+
+  const intervalRef = useRef(null);
 
   /* ================= SOUND SYSTEM ================= */
 
@@ -62,7 +62,7 @@ export default function useSnakeGame() {
 
     const { x, y } = directionRef.current;
 
-    // Prevent reverse direction
+    // Prevent reverse
     if (x + newDirection.x === 0 && y + newDirection.y === 0) {
       return;
     }
@@ -86,39 +86,36 @@ export default function useSnakeGame() {
     return () => window.removeEventListener("keydown", handleKey);
   }, [isRunning]);
 
-  /* ================= MOBILE SWIPE CONTROL ================= */
+  /* ================= MOBILE SWIPE ================= */
 
   useEffect(() => {
-    let touchStartX = 0;
-    let touchStartY = 0;
+    let startX = 0;
+    let startY = 0;
 
     const handleTouchStart = (e) => {
       const touch = e.touches[0];
-      touchStartX = touch.clientX;
-      touchStartY = touch.clientY;
+      startX = touch.clientX;
+      startY = touch.clientY;
     };
 
     const handleTouchEnd = (e) => {
       if (!isRunning) return;
 
       const touch = e.changedTouches[0];
-      const dx = touch.clientX - touchStartX;
-      const dy = touch.clientY - touchStartY;
+      const dx = touch.clientX - startX;
+      const dy = touch.clientY - startY;
 
-      const minSwipeDistance = 30; // prevent accidental small swipes
-
-      if (Math.abs(dx) < minSwipeDistance && Math.abs(dy) < minSwipeDistance) {
-        return;
-      }
+      const min = 30;
+      if (Math.abs(dx) < min && Math.abs(dy) < min) return;
 
       if (Math.abs(dx) > Math.abs(dy)) {
-        // Horizontal swipe
-        if (dx > 0) changeDirection({ x: 1, y: 0 });
-        else changeDirection({ x: -1, y: 0 });
+        dx > 0
+          ? changeDirection({ x: 1, y: 0 })
+          : changeDirection({ x: -1, y: 0 });
       } else {
-        // Vertical swipe
-        if (dy > 0) changeDirection({ x: 0, y: 1 });
-        else changeDirection({ x: 0, y: -1 });
+        dy > 0
+          ? changeDirection({ x: 0, y: 1 })
+          : changeDirection({ x: 0, y: -1 });
       }
     };
 
@@ -136,49 +133,53 @@ export default function useSnakeGame() {
   useEffect(() => {
     if (!isRunning || gameOver) return;
 
-    const dynamicSpeed = Math.max(BASE_SPEED - score * 8, 80);
+    const speed = Math.max(BASE_SPEED - score * 5, 70);
 
-    const interval = setInterval(() => {
+    intervalRef.current = setInterval(() => {
       setSnake((prevSnake) => {
+        const head = prevSnake[0];
         const newHead = {
-          x: prevSnake[0].x + directionRef.current.x,
-          y: prevSnake[0].y + directionRef.current.y,
+          x: head.x + directionRef.current.x,
+          y: head.y + directionRef.current.y,
         };
 
-        // WALL COLLISION
+        // Wall collision
         if (
           newHead.x < 0 ||
           newHead.y < 0 ||
           newHead.x >= GRID_SIZE ||
           newHead.y >= GRID_SIZE
         ) {
-          gameOverSound.current?.play().catch(() => {});
-          bgMusic.current?.pause();
-          setGameOver(true);
-          setIsRunning(false);
+          endGame();
           return prevSnake;
         }
 
-        // SELF COLLISION
+        // Self collision (ignore last tail because it moves)
+        const body = prevSnake.slice(0, -1);
         if (
-          prevSnake.some(
+          body.some(
             (segment) =>
               segment.x === newHead.x &&
               segment.y === newHead.y
           )
         ) {
-          gameOverSound.current?.play().catch(() => {});
-          bgMusic.current?.pause();
-          setGameOver(true);
-          setIsRunning(false);
+          endGame();
           return prevSnake;
         }
 
         const newSnake = [newHead, ...prevSnake];
 
-        // EAT FOOD
+        // Eat food
         if (newHead.x === food.x && newHead.y === food.y) {
           eatSound.current?.play().catch(() => {});
+
+          // 🔥 Particle trigger for canvas
+          window.dispatchEvent(
+            new CustomEvent("snakeEat", {
+              detail: { x: newHead.x, y: newHead.y },
+            })
+          );
+
           setFood(getRandomFood(newSnake));
 
           setScore((prev) => {
@@ -197,12 +198,22 @@ export default function useSnakeGame() {
 
         return newSnake;
       });
-    }, dynamicSpeed);
+    }, speed);
 
-    return () => clearInterval(interval);
-  }, [food, isRunning, gameOver, score, highScore]);
+    return () => clearInterval(intervalRef.current);
+  }, [food, isRunning, gameOver, score]);
 
-  /* ================= START & RESTART ================= */
+  /* ================= END GAME ================= */
+
+  const endGame = () => {
+    gameOverSound.current?.play().catch(() => {});
+    bgMusic.current?.pause();
+    setGameOver(true);
+    setIsRunning(false);
+    clearInterval(intervalRef.current);
+  };
+
+  /* ================= START / RESTART ================= */
 
   const startGame = () => {
     setGameOver(false);
