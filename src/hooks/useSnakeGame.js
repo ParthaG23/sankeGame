@@ -76,21 +76,59 @@ export default function useSnakeGame() {
     const handleKey = (e) => {
       if (!isRunning) return;
 
-      if (e.key === "ArrowUp")
-        changeDirection({ x: 0, y: -1 });
-
-      if (e.key === "ArrowDown")
-        changeDirection({ x: 0, y: 1 });
-
-      if (e.key === "ArrowLeft")
-        changeDirection({ x: -1, y: 0 });
-
-      if (e.key === "ArrowRight")
-        changeDirection({ x: 1, y: 0 });
+      if (e.key === "ArrowUp") changeDirection({ x: 0, y: -1 });
+      if (e.key === "ArrowDown") changeDirection({ x: 0, y: 1 });
+      if (e.key === "ArrowLeft") changeDirection({ x: -1, y: 0 });
+      if (e.key === "ArrowRight") changeDirection({ x: 1, y: 0 });
     };
 
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
+  }, [isRunning]);
+
+  /* ================= MOBILE SWIPE CONTROL ================= */
+
+  useEffect(() => {
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    const handleTouchStart = (e) => {
+      const touch = e.touches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+    };
+
+    const handleTouchEnd = (e) => {
+      if (!isRunning) return;
+
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - touchStartX;
+      const dy = touch.clientY - touchStartY;
+
+      const minSwipeDistance = 30; // prevent accidental small swipes
+
+      if (Math.abs(dx) < minSwipeDistance && Math.abs(dy) < minSwipeDistance) {
+        return;
+      }
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+        // Horizontal swipe
+        if (dx > 0) changeDirection({ x: 1, y: 0 });
+        else changeDirection({ x: -1, y: 0 });
+      } else {
+        // Vertical swipe
+        if (dy > 0) changeDirection({ x: 0, y: 1 });
+        else changeDirection({ x: 0, y: -1 });
+      }
+    };
+
+    window.addEventListener("touchstart", handleTouchStart);
+    window.addEventListener("touchend", handleTouchEnd);
+
+    return () => {
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchend", handleTouchEnd);
+    };
   }, [isRunning]);
 
   /* ================= GAME LOOP ================= */
@@ -114,14 +152,8 @@ export default function useSnakeGame() {
           newHead.x >= GRID_SIZE ||
           newHead.y >= GRID_SIZE
         ) {
-          if (gameOverSound.current) {
-            gameOverSound.current.play().catch(() => {});
-          }
-
-          if (bgMusic.current) {
-            bgMusic.current.pause();
-          }
-
+          gameOverSound.current?.play().catch(() => {});
+          bgMusic.current?.pause();
           setGameOver(true);
           setIsRunning(false);
           return prevSnake;
@@ -135,14 +167,8 @@ export default function useSnakeGame() {
               segment.y === newHead.y
           )
         ) {
-          if (gameOverSound.current) {
-            gameOverSound.current.play().catch(() => {});
-          }
-
-          if (bgMusic.current) {
-            bgMusic.current.pause();
-          }
-
+          gameOverSound.current?.play().catch(() => {});
+          bgMusic.current?.pause();
           setGameOver(true);
           setIsRunning(false);
           return prevSnake;
@@ -152,10 +178,7 @@ export default function useSnakeGame() {
 
         // EAT FOOD
         if (newHead.x === food.x && newHead.y === food.y) {
-          if (eatSound.current) {
-            eatSound.current.play().catch(() => {});
-          }
-
+          eatSound.current?.play().catch(() => {});
           setFood(getRandomFood(newSnake));
 
           setScore((prev) => {
@@ -179,19 +202,13 @@ export default function useSnakeGame() {
     return () => clearInterval(interval);
   }, [food, isRunning, gameOver, score, highScore]);
 
-  /* ================= START GAME ================= */
+  /* ================= START & RESTART ================= */
 
   const startGame = () => {
     setGameOver(false);
     setIsRunning(true);
-
-    if (bgMusic.current) {
-      bgMusic.current.currentTime = 0;
-      bgMusic.current.play().catch(() => {});
-    }
+    bgMusic.current?.play().catch(() => {});
   };
-
-  /* ================= RESTART GAME ================= */
 
   const restartGame = () => {
     setSnake(INITIAL_SNAKE);
@@ -200,11 +217,7 @@ export default function useSnakeGame() {
     setScore(0);
     setGameOver(false);
     setIsRunning(true);
-
-    if (bgMusic.current) {
-      bgMusic.current.currentTime = 0;
-      bgMusic.current.play().catch(() => {});
-    }
+    bgMusic.current?.play().catch(() => {});
   };
 
   return {
@@ -217,6 +230,6 @@ export default function useSnakeGame() {
     startGame,
     restartGame,
     isRunning,
-    changeDirection, // <-- Important for mobile swipe
+    changeDirection,
   };
 }
