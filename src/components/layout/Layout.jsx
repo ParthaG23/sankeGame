@@ -17,16 +17,16 @@ const Layout = () => {
   } = useSnakeGame();
 
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-slate-900">
+    <div className="h-screen flex flex-col bg-slate-900">
 
       {/* ===== TOP BAR ===== */}
       <TopBar />
 
-      {/* ===== MAIN CONTENT ===== */}
-      <div className="flex flex-1">
+      {/* ===== MAIN SECTION ===== */}
+      <div className="flex flex-1 overflow-hidden">
 
-        {/* Desktop Sidebar */}
-        <div className="hidden md:block">
+        {/* ===== DESKTOP SIDEBAR ===== */}
+        <div className="hidden md:flex w-64 bg-slate-800 border-r border-slate-700">
           <Sidebar
             score={score}
             highScore={highScore}
@@ -36,23 +36,22 @@ const Layout = () => {
           />
         </div>
 
-        {/* Game Area */}
-        <div className="flex-1 flex items-center justify-center px-3 py-4">
-          <div className="w-full max-w-[520px] aspect-square">
-            <GameArea
-              snake={snake}
-              food={food}
-              gameOver={gameOver}
-              GRID_SIZE={GRID_SIZE}
-              onRestart={restartGame}
-              score={score}
-              highScore={highScore}
-              isRunning={isRunning}
-              onStart={startGame}
-            />
-          </div>
-        </div>
+        {/* ===== GAME AREA ===== */}
+        <div className="flex-1 flex items-center justify-center bg-black">
 
+          <GameArea
+            snake={snake}
+            food={food}
+            gameOver={gameOver}
+            GRID_SIZE={GRID_SIZE}
+            onRestart={restartGame}
+            score={score}
+            highScore={highScore}
+            isRunning={isRunning}
+            onStart={startGame}
+          />
+
+        </div>
       </div>
     </div>
   );

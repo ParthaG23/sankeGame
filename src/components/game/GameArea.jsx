@@ -13,32 +13,36 @@ const GameArea = ({
   onStart,
 }) => {
   return (
-    <div className="flex flex-col flex-1 bg-black">
+    <div className="w-full h-full flex flex-col">
 
-      {/* ===== BOARD AREA ===== */}
-      <div className="flex-1 flex items-center justify-center p-3">
-        {/* This container controls size */}
-        <div className="w-full max-w-[520px] aspect-square">
-          <SnakeBoard
-            snake={snake}
-            food={food}
-            GRID_SIZE={GRID_SIZE}
-          />
+      {/* ===== GAME BOARD ===== */}
+      <div className="flex-1 relative">
+        <SnakeBoard
+          snake={snake}
+          food={food}
+          GRID_SIZE={GRID_SIZE}
+        />
 
-          {gameOver && (
-            <GameOverOverlay onRestart={onRestart} />
-          )}
-        </div>
+        {gameOver && (
+          <GameOverOverlay onRestart={onRestart} />
+        )}
       </div>
 
       {/* ===== MOBILE CONTROLS ===== */}
       <div className="md:hidden bg-slate-900 border-t border-slate-700 px-4 py-3 flex justify-between items-center">
+
         <div className="text-white text-sm">
-          Score: <span className="text-yellow-400 font-semibold">{score}</span>
+          Score:
+          <span className="text-yellow-400 font-semibold ml-1">
+            {score}
+          </span>
         </div>
 
         <div className="text-white text-sm">
-          High: <span className="text-green-400 font-semibold">{highScore}</span>
+          High:
+          <span className="text-green-400 font-semibold ml-1">
+            {highScore}
+          </span>
         </div>
 
         <button
@@ -47,6 +51,7 @@ const GameArea = ({
         >
           {isRunning ? "Restart" : "Start"}
         </button>
+
       </div>
 
     </div>
